@@ -1,3 +1,4 @@
+-- +goose Up
 CREATE TABLE items (
     id SERIAL PRIMARY KEY,
     order_uid VARCHAR(100) NOT NULL REFERENCES orders(order_uid) ON DELETE CASCADE,
@@ -13,3 +14,6 @@ CREATE TABLE items (
     brand VARCHAR(100) NOT NULL,
     status INTEGER NOT NULL
 );
+
+-- +goose Down
+DROP TABLE IF EXISTS items;

@@ -1,3 +1,4 @@
+-- +goose Up
 CREATE TABLE payments (
     order_uid     VARCHAR(100) PRIMARY KEY REFERENCES orders(order_uid),
     transaction   VARCHAR(50) NOT NULL,
@@ -11,3 +12,6 @@ CREATE TABLE payments (
     goods_total   INTEGER NOT NULL,
     custom_fee    INTEGER DEFAULT 0
 );
+
+-- +goose Down
+DROP TABLE IF EXISTS payments;

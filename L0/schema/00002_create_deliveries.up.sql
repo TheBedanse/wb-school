@@ -1,3 +1,4 @@
+-- +goose Up
 CREATE TABLE deliveries (
     order_uid VARCHAR(100) PRIMARY KEY REFERENCES orders(order_uid),
     name      VARCHAR(100) NOT NULL,
@@ -8,3 +9,6 @@ CREATE TABLE deliveries (
     region    VARCHAR(50) NOT NULL,
     email     VARCHAR(100) NOT NULL
 );
+
+-- +goose Down
+DROP TABLE IF EXISTS deliveries;

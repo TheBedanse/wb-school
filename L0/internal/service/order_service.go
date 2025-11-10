@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"L0/internal/cache"
@@ -12,22 +13,23 @@ import (
 type OrderService struct {
 	orderRepo *database.Database
 	cache     *cache.Cache
+	validator *models.Validator
 }
 
 func NewOrderService(orderRepo *database.Database, cache *cache.Cache) *OrderService {
 	return &OrderService{
 		orderRepo: orderRepo,
 		cache:     cache,
+		validator: &models.Validator{},
 	}
 }
 
 func (s *OrderService) RestoreCacheFromDB(ctx context.Context) error {
-	log.Println("Restoring cache from database...")
+	log.Println("Restoring cache from database")
 
 	orderUIDs, err := s.orderRepo.GetAllOrderUIDs(ctx)
 	if err != nil {
-		log.Printf("Warning: Could not restore cache from DB: %v", err)
-		return nil
+		return fmt.Errorf("failed to get orderUID for cache restoration: %w", err)
 	}
 
 	count := 0
@@ -37,41 +39,69 @@ func (s *OrderService) RestoreCacheFromDB(ctx context.Context) error {
 			log.Printf("Error restoring order %s: %v", orderUID, err)
 			continue
 		}
-		s.cache.Set(order)
+
+		if err := s.cache.Set(order); err != nil {
+			log.Printf("Failed to cache order %s: %v", orderUID, err)
+			continue
+		}
 		count++
 	}
 
-	log.Printf("Cache restored successfully. Loaded %d orders", count)
+	log.Printf("Cache restore. Loaded %d orders", count)
 	return nil
 }
 
 func (s *OrderService) ProcessOrder(ctx context.Context, order *models.Order) error {
-	s.cache.Set(order)
+	if err := s.validator.ValidateOrder(order); err != nil {
+		return fmt.Errorf("order validation failed: %w", err)
+	}
+
+	if err := s.cache.Set(order); err != nil {
+		return fmt.Errorf("failed to cache order: %w", err)
+	}
 	log.Printf("Order cached: %s", order.OrderUID)
 
 	if err := s.orderRepo.SaveOrder(ctx, order); err != nil {
-		log.Printf("Warning: Failed to save order %s to DB: %v", order.OrderUID, err)
-		return nil
+		return fmt.Errorf("failed to save order to DB: %w", err)
 	}
 
-	log.Printf("Order saved to database(ProcessOrder): %s", order.OrderUID)
+	log.Printf("Order processed successfully: %s", order.OrderUID)
 	return nil
 }
 
 func (s *OrderService) GetOrder(ctx context.Context, orderUID string) (*models.Order, error) {
+	if orderUID == "" {
+		return nil, fmt.Errorf("orderUID cannot be empty")
+	}
+
 	if order, exists := s.cache.Get(orderUID); exists {
 		return order, nil
 	}
 
 	order, err := s.orderRepo.GetOrderByUID(ctx, orderUID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get order from DB: %w", err)
 	}
 
-	s.cache.Set(order)
+	if err := s.cache.Set(order); err != nil {
+		log.Printf("Warning: failed to cache order %s: %v", orderUID, err)
+	}
+
 	return order, nil
 }
 
 func (s *OrderService) GetAllOrders() []*models.Order {
 	return s.cache.GetAll()
+}
+
+func (s *OrderService) CleanupCache() int {
+	return s.cache.Cleanup()
+}
+
+func (s *OrderService) GetCacheStats() map[string]interface{} {
+	return s.cache.GetStats()
+}
+
+func (s *OrderService) ValidateOrderOnly(order *models.Order) error {
+	return s.validator.ValidateOrder(order)
 }

@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -15,10 +17,17 @@ import (
 	"L0/internal/handler"
 	"L0/internal/kafka"
 	"L0/internal/service"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/pressly/goose/v3"
 )
 
 func main() {
 	cfg := config.LoadConfig()
+
+	// if err := autoMigrate(cfg.DBPassword); err != nil {
+	// 	log.Fatal("Failed to apply migrations:", err)
+	// }
 
 	db, err := database.NewDB(cfg.DBPassword)
 	if err != nil {
@@ -26,14 +35,14 @@ func main() {
 	}
 	defer db.Close()
 
-	cache := cache.NewCache()
-	orderService := service.NewOrderService(db, cache)
+	orderCache := cache.NewCache()
+	orderService := service.NewOrderService(db, orderCache)
 
 	ctx := context.Background()
 	if err := orderService.RestoreCacheFromDB(ctx); err != nil {
 		log.Printf("Warning: failed to restore cache from DB: %v", err)
 	} else {
-		log.Printf("Cache restored successfully. Loaded %d orders", cache.Size())
+		log.Printf("Cache restored successfully. Loaded %d orders", orderCache.Size())
 	}
 
 	consumer := kafka.NewMockConsumer(orderService)
@@ -78,4 +87,15 @@ func main() {
 	}
 
 	log.Println("Server exited properly")
+}
+
+func autoMigrate(dbPassword string) error {
+	connStr := fmt.Sprintf("postgres://L0User:%s@localhost:5432/L0?sslmode=disable", dbPassword)
+	db, err := sql.Open("pgx", connStr)
+	if err != nil {
+		return fmt.Errorf("failed to connect: %w", err)
+	}
+	defer db.Close()
+
+	return goose.Up(db, "schema")
 }

@@ -1,3 +1,4 @@
+-- +goose Up
 CREATE TABLE orders (
     order_uid 			VARCHAR(100) PRIMARY KEY,
     track_number 		VARCHAR(50) NOT NULL,
@@ -11,3 +12,6 @@ CREATE TABLE orders (
     date_created		TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     oof_shard 			VARCHAR(10) NOT NULL
 );
+
+-- +goose Down
+DROP TABLE IF EXISTS orders;
