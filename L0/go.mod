@@ -8,8 +8,6 @@ require (
 	github.com/pressly/goose/v3 v3.26.0
 )
 
-require github.com/pkg/errors v0.9.1 // indirect
-
 require (
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
