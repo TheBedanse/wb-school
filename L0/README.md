@@ -1,19 +1,25 @@
-##Database Migrations Tool
+# Database Migrations Tool
 
-Usage:
+__Usage:__
+```
   go run cmd/migrate/main.go <command>
+  ```
 
-Commands:
-  up       Apply all pending migrations (create tables)
-  down     Rollback last migration  
-  reset    Rollback all migrations
-  status   Show migration status
-  version  Show current version
+__Commands:__
+|Столбец 1|Столбец 2|
+|:-:|:-:|
+  up      | Apply all pending migrations (create tables)
+  down    | Rollback last migration  
+  reset   | Rollback all migrations
+  status  | Show migration status
+  version | Show current version
 
-Examples:
-  go run cmd/migrate/main.go up     # Create all tables
-  go run cmd/migrate/main.go down   # Remove last table
-  go run cmd/migrate/main.go status # Show migration status
+__Examples:__
+```
+  go run cmd/migrate/main.go up
+  go run cmd/migrate/main.go down
+  go run cmd/migrate/main.go status
+  ```
 
-#Install goose
+## Install goose
 https://pressly.github.io/goose/installation
