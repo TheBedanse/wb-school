@@ -23,3 +23,9 @@ __Examples:__
 
 ## Install goose
 https://pressly.github.io/goose/installation
+
+# .env
+DB_PASSWORD=password
+HTTP_PORT=8080
+KAFKA_BROKERS=kafka:9092
+POSTGRES_HOST=postgres

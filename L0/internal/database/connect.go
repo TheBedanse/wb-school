@@ -12,8 +12,8 @@ type Database struct {
 	Conn *pgx.Conn
 }
 
-func NewDB(dbPassword string) (*Database, error) {
-	connStr := fmt.Sprintf("postgres://L0User:%s@localhost:5432/L0", dbPassword)
+func NewDB(dbPassword, hostName string) (*Database, error) {
+	connStr := fmt.Sprintf("postgres://L0User:%s@%s:5432/L0", dbPassword, hostName)
 
 	conn, err := pgx.Connect(context.Background(), connStr)
 	if err != nil {

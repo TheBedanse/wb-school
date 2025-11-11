@@ -19,7 +19,7 @@ func main() {
 		log.Fatal("DB_PASSWORD not found")
 	}
 
-	connStr := fmt.Sprintf("postgres://L0User:%s@localhost:5432/L0?sslmode=disable", cfg.DBPassword)
+	connStr := fmt.Sprintf("postgres://L0User:%s@%s:5432/L0", cfg.DBPassword, cfg.HostName)
 	db, err := sql.Open("pgx", connStr)
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)

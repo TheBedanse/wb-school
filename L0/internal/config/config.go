@@ -8,16 +8,20 @@ import (
 )
 
 type Config struct {
-	DBPassword string
-	HTTPPort   string
+	DBPassword  string
+	HTTPPort    string
+	KafkaBroker string
+	HostName    string
 }
 
 func LoadConfig() *Config {
 	env := loadEnv()
 
 	return &Config{
-		DBPassword: env["DB_PASSWORD"],
-		HTTPPort:   env["HTTP_PORT"],
+		DBPassword:  env["DB_PASSWORD"],
+		HTTPPort:    env["HTTP_PORT"],
+		KafkaBroker: env["KAFKA_BROKERS"],
+		HostName:    env["POSTGRES_HOST"],
 	}
 }
 

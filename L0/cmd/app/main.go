@@ -22,7 +22,7 @@ import (
 func main() {
 	cfg := config.LoadConfig()
 
-	db, err := database.NewDB(cfg.DBPassword)
+	db, err := database.NewDB(cfg.DBPassword, cfg.HostName)
 	if err != nil {
 		log.Fatal("Error connecting to database:", err)
 	}
@@ -38,7 +38,7 @@ func main() {
 		log.Printf("Cache restored successfully. Loaded %d orders", orderCache.Size())
 	}
 
-	consumer := kafka.NewMockConsumer(orderService)
+	consumer := kafka.NewConsumer(orderService, cfg.KafkaBroker)
 	defer consumer.Close()
 
 	go consumer.Start(ctx)

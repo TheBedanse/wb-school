@@ -1,0 +1,101 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: L0
+      POSTGRES_USER: L0User
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./schema:/docker-entrypoint-initdb.d
+    networks:
+      - l0-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U L0User -d L0"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  migrations:
+    build:
+      context: .
+      dockerfile: Dockerfile.migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - l0-network
+
+  zookeeper:
+    image: wurstmeister/zookeeper:latest
+    ports:
+      - "2181:2181"
+    networks:
+      - l0-network
+
+  kafka:
+    image: wurstmeister/kafka:latest
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CREATE_TOPICS: "orders:1:1"
+    depends_on:
+      - zookeeper
+    networks:
+      - l0-network
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "9092"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      - DB_PASSWORD=${DB_PASSWORD}
+      - HTTP_PORT=${HTTP_PORT}
+      - KAFKA_BROKERS=${KAFKA_BROKERS}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+    networks:
+      - l0-network
+    restart: on-failure
+
+  order-generator:
+    build: 
+      context: .
+      dockerfile: Dockerfile.generator
+    depends_on:
+      kafka:
+        condition: service_started
+      app:
+        condition: service_started
+    environment:
+      - DB_PASSWORD=${DB_PASSWORD}
+      - HTTP_PORT=${HTTP_PORT}
+      - KAFKA_BROKERS=${KAFKA_BROKERS}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+    networks:
+      - l0-network
+    restart: on-failure
+
+volumes:
+  postgres_data:
+
+networks:
+  l0-network:
+    driver: bridge
