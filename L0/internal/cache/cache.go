@@ -1,11 +1,14 @@
 package cache
 
 import (
+	"L0/internal/interfaces"
 	"L0/internal/models"
 	"fmt"
 	"sync"
 	"time"
 )
+
+var _ interfaces.Cache = (*Cache)(nil)
 
 type Cache struct {
 	mu         sync.RWMutex
@@ -19,7 +22,7 @@ type cacheEntry struct {
 	lastAccess time.Time
 }
 
-func NewCache() *Cache {
+func NewCache() interfaces.Cache {
 	return &Cache{
 		orders:     make(map[string]*cacheEntry),
 		maxSize:    1000,

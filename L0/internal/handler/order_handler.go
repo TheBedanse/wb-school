@@ -8,15 +8,15 @@ import (
 	"net/http"
 	"strings"
 
-	"L0/internal/service"
+	"L0/internal/interfaces"
 )
 
 type OrderHandler struct {
-	orderService *service.OrderService
+	orderService interfaces.OrderService
 	tmpl         *template.Template
 }
 
-func NewOrderHandler(orderService *service.OrderService) (*OrderHandler, error) {
+func NewOrderHandler(orderService interfaces.OrderService) (*OrderHandler, error) {
 	tmpl, err := template.ParseFiles(
 		"html/index.html",
 		"html/order.html",

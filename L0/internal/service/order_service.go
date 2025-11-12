@@ -5,18 +5,19 @@ import (
 	"fmt"
 	"log"
 
-	"L0/internal/cache"
-	"L0/internal/database"
+	"L0/internal/interfaces"
 	"L0/internal/models"
 )
 
+var _ interfaces.OrderService = (*OrderService)(nil)
+
 type OrderService struct {
-	orderRepo *database.Database
-	cache     *cache.Cache
-	validator *models.Validator
+	orderRepo interfaces.Repository
+	cache     interfaces.Cache
+	validator interfaces.Validator
 }
 
-func NewOrderService(orderRepo *database.Database, cache *cache.Cache) *OrderService {
+func NewOrderService(orderRepo interfaces.Repository, cache interfaces.Cache) interfaces.OrderService {
 	return &OrderService{
 		orderRepo: orderRepo,
 		cache:     cache,
