@@ -47,7 +47,6 @@ func (p *Producer) Close() error {
 	return p.writer.Close()
 }
 
-// Функция для генерации и отправки заказа
 func GenerateAndSendOrder(producer *Producer) error {
 	order := GenerateTestOrder()
 	ctx := context.Background()
