@@ -65,7 +65,7 @@ func (s *OrderService) ProcessOrder(ctx context.Context, order *models.Order) er
 		return fmt.Errorf("failed to save order to DB: %w", err)
 	}
 
-	log.Printf("Order processed successfully: %s", order.OrderUID)
+	log.Printf("Order processed successfully(Service): %s", order.OrderUID)
 	return nil
 }
 
@@ -92,16 +92,4 @@ func (s *OrderService) GetOrder(ctx context.Context, orderUID string) (*models.O
 
 func (s *OrderService) GetAllOrders() []*models.Order {
 	return s.cache.GetAll()
-}
-
-func (s *OrderService) CleanupCache() int {
-	return s.cache.Cleanup()
-}
-
-func (s *OrderService) GetCacheStats() map[string]interface{} {
-	return s.cache.GetStats()
-}
-
-func (s *OrderService) ValidateOrderOnly(order *models.Order) error {
-	return s.validator.ValidateOrder(order)
 }

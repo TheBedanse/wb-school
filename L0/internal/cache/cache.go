@@ -29,7 +29,7 @@ func NewCache() *Cache {
 
 func (c *Cache) Set(order *models.Order) error {
 	if order == nil || order.OrderUID == "" {
-		return ErrInvalidOrder
+		return fmt.Errorf("invalid order")
 	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -81,67 +81,29 @@ func (c *Cache) GetAll() []*models.Order {
 	return orders
 }
 
-func (c *Cache) Delete(orderUID string) error {
-	if orderUID == "" {
-		return ErrInvalidOrderUID
-	}
-
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	delete(c.orders, orderUID)
-	return nil
-}
-
-func (c *Cache) Cleanup() int {
+func (c *Cache) Cleanup() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	now := time.Now()
-	count := 0
 
 	for orderUID, entry := range c.orders {
 		if now.After(entry.expiresAt) {
 			delete(c.orders, orderUID)
-			count++
 		}
 	}
 
-	return count
+	go c.startCleanupWorker()
+
 }
 
-func (c *Cache) SetWithTTL(order *models.Order, ttl time.Duration) error {
-	if order == nil || order.OrderUID == "" {
-		return ErrInvalidOrder
-	}
+func (c *Cache) startCleanupWorker() {
+	ticker := time.NewTicker(3 * time.Minute)
+	defer ticker.Stop()
 
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	if len(c.orders) >= c.maxSize {
-		c.evictOldest()
-	}
-
-	c.orders[order.OrderUID] = &cacheEntry{
-		order:      order,
-		expiresAt:  time.Now().Add(ttl),
-		lastAccess: time.Now(),
-	}
-	return nil
-}
-
-func (c *Cache) evictOldest() {
-	var oldestKey string
-	var oldestTime time.Time
-
-	for key, entry := range c.orders {
-		if oldestKey == "" || entry.lastAccess.Before(oldestTime) {
-			oldestKey = key
-			oldestTime = entry.lastAccess
-		}
-	}
-
-	if oldestKey != "" {
-		delete(c.orders, oldestKey)
+	for {
+		<-ticker.C
+		c.Cleanup()
 	}
 }
 
@@ -150,29 +112,3 @@ func (c *Cache) Size() int {
 	defer c.mu.RUnlock()
 	return len(c.orders)
 }
-
-func (c *Cache) GetStats() map[string]interface{} {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-
-	now := time.Now()
-	expiredCount := 0
-
-	for _, entry := range c.orders {
-		if now.After(entry.expiresAt) {
-			expiredCount++
-		}
-	}
-
-	return map[string]interface{}{
-		"total_entries":   len(c.orders),
-		"expired_entries": expiredCount,
-		"max_size":        c.maxSize,
-	}
-}
-
-var (
-	ErrInvalidOrder    = fmt.Errorf("invalid order")
-	ErrInvalidOrderUID = fmt.Errorf("invalid orderUID")
-	ErrCacheFull       = fmt.Errorf("cache is full")
-)

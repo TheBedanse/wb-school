@@ -53,7 +53,7 @@ func (c *Consumer) Start(ctx context.Context) {
 		if err := c.orderService.ProcessOrder(ctx, &order); err != nil {
 			log.Printf("Failed to process order %s: %v", order.OrderUID, err)
 		} else {
-			log.Printf("Order processed successfully: %s", order.OrderUID)
+			log.Printf("Order processed success (Consumer): %s", order.OrderUID)
 		}
 	}
 }
