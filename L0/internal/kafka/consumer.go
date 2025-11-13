@@ -6,18 +6,18 @@ import (
 	"log"
 	"strings"
 
+	"L0/internal/interfaces"
 	"L0/internal/models"
-	"L0/internal/service"
 
 	"github.com/segmentio/kafka-go"
 )
 
 type Consumer struct {
 	reader       *kafka.Reader
-	orderService *service.OrderService
+	orderService interfaces.OrderService
 }
 
-func NewConsumer(orderService *service.OrderService, brokers string) *Consumer {
+func NewConsumer(orderService interfaces.OrderService, brokers string) *Consumer {
 	reader := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:  strings.Split(brokers, ","),
 		Topic:    "orders",
@@ -53,7 +53,7 @@ func (c *Consumer) Start(ctx context.Context) {
 		if err := c.orderService.ProcessOrder(ctx, &order); err != nil {
 			log.Printf("Failed to process order %s: %v", order.OrderUID, err)
 		} else {
-			log.Printf("Order processed successfully: %s", order.OrderUID)
+			log.Printf("Order processed success (Consumer): %s", order.OrderUID)
 		}
 	}
 }

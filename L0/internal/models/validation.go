@@ -215,14 +215,29 @@ func (v *Validator) validateItem(item *Item, index int) error {
 }
 
 func (v *Validator) isValidPhone(phone string) bool {
-	// Простая проверка телефона
-	phoneRegex := `^\+?[1-9]\d{1,14}$`
-	matched, _ := regexp.MatchString(phoneRegex, phone)
-	return matched
+	if phone == "" {
+		return false
+	}
+
+	cleanPhone := phone
+
+	if phone[0] == '+' {
+		cleanPhone = phone[1:]
+	}
+	if len(cleanPhone) < 5 || len(cleanPhone) > 15 {
+		return false
+	}
+
+	for _, char := range cleanPhone {
+		if char < '0' || char > '9' {
+			return false
+		}
+	}
+
+	return true
 }
 
 func (v *Validator) isValidEmail(email string) bool {
-	// Простая проверка email
 	emailRegex := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
 	matched, _ := regexp.MatchString(emailRegex, email)
 	return matched

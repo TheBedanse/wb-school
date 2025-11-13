@@ -10,7 +10,6 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./schema:/docker-entrypoint-initdb.d
     networks:
       - l0-network
     healthcheck:
@@ -29,6 +28,8 @@ services:
     environment:
       POSTGRES_HOST: ${POSTGRES_HOST}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ./schema:/app/schema
     networks:
       - l0-network
 

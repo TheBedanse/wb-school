@@ -1,6 +1,7 @@
 package database
 
 import (
+	"L0/internal/interfaces"
 	"context"
 	"fmt"
 	"log"
@@ -8,11 +9,13 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+var _ interfaces.Repository = (*Database)(nil)
+
 type Database struct {
 	Conn *pgx.Conn
 }
 
-func NewDB(dbPassword, hostName string) (*Database, error) {
+func NewDB(dbPassword, hostName string) (interfaces.Repository, error) {
 	connStr := fmt.Sprintf("postgres://L0User:%s@%s:5432/L0", dbPassword, hostName)
 
 	conn, err := pgx.Connect(context.Background(), connStr)
