@@ -1,7 +1,11 @@
 package kafka
 
 import (
+	"L0/internal/interfaces"
 	"L0/internal/models"
+	"context"
+	"log"
+	"time"
 
 	"github.com/brianvoe/gofakeit/v7"
 )
@@ -71,4 +75,38 @@ func generateFakeItems(count int, trackNum string) []models.Item {
 	}
 
 	return items
+}
+
+func LocalOrderGeneration(ctx context.Context, orderService interfaces.OrderService) {
+	ticker := time.NewTicker(15 * time.Second)
+	defer ticker.Stop()
+
+	log.Printf("Local generation every 15 seconds")
+
+	if err := generateAndProcessOrder(ctx, orderService); err != nil {
+		log.Printf("Error generating initial order: %v", err)
+	}
+
+	for {
+		select {
+		case <-ctx.Done():
+			log.Println("Stopping order generation")
+			return
+		case <-ticker.C:
+			if err := generateAndProcessOrder(ctx, orderService); err != nil {
+				log.Printf("Error generating order: %v", err)
+			}
+		}
+	}
+}
+
+func generateAndProcessOrder(ctx context.Context, orderService interfaces.OrderService) error {
+	order := GenerateTestOrder()
+
+	if err := orderService.ProcessOrder(ctx, order); err != nil {
+		return err
+	}
+
+	log.Printf("Order generated directly: %s", order.OrderUID)
+	return nil
 }

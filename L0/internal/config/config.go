@@ -12,16 +12,30 @@ type Config struct {
 	HTTPPort    string
 	KafkaBroker string
 	HostName    string
+	IsKafka     bool
 }
 
 func LoadConfig() *Config {
 	env := loadEnv()
+	isDocker := checkDockerEnvironment()
+	isKafka := false
+
+	hostName := env["POSTGRES_HOST"]
+	if hostName == "" {
+		if isDocker {
+			hostName = "postgres"
+			isKafka = true
+		} else {
+			hostName = "localhost"
+		}
+	}
 
 	return &Config{
 		DBPassword:  env["DB_PASSWORD"],
 		HTTPPort:    env["HTTP_PORT"],
 		KafkaBroker: env["KAFKA_BROKERS"],
-		HostName:    env["POSTGRES_HOST"],
+		HostName:    hostName,
+		IsKafka:     isKafka,
 	}
 }
 
@@ -49,4 +63,17 @@ func loadEnv() map[string]string {
 	}
 	return env
 
+}
+
+func checkDockerEnvironment() bool {
+	if _, err := os.Stat("/.dockerenv"); err == nil {
+		return true
+	}
+
+	content, err := os.ReadFile("/proc/1/cgroup")
+	if err == nil && strings.Contains(string(content), "docker") {
+		return true
+	}
+
+	return false
 }

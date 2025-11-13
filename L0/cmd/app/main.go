@@ -38,10 +38,15 @@ func main() {
 		log.Printf("Cache restored successfully. Loaded %d orders", orderCache.Size())
 	}
 
-	consumer := kafka.NewConsumer(orderService, cfg.KafkaBroker)
-	defer consumer.Close()
+	if cfg.IsKafka {
+		consumer := kafka.NewConsumer(orderService, cfg.KafkaBroker)
+		defer consumer.Close()
 
-	go consumer.Start(ctx)
+		go consumer.Start(ctx)
+	} else {
+		go kafka.LocalOrderGeneration(ctx, orderService)
+		log.Printf("Start local order generation")
+	}
 
 	orderHandler, err := handler.NewOrderHandler(orderService)
 	if err != nil {
@@ -61,7 +66,6 @@ func main() {
 	go func() {
 		log.Printf("Server starting on :%s", cfg.HTTPPort)
 		log.Printf("Access the application at: http://localhost:%s", cfg.HTTPPort)
-		log.Printf("Mock Kafka Consumer is generating test orders every 15 seconds")
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatal("Server error:", err)
 		}
