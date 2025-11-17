@@ -1,6 +1,9 @@
 package interfaces
 
-import "L0/internal/models"
+import (
+	"L0/internal/models"
+	"context"
+)
 
 //go:generate mockgen -source=cache.go -destination=../mocks/mock_cache.go -package=mocks
 
@@ -10,4 +13,5 @@ type Cache interface {
 	GetAll() []*models.Order
 	Size() int
 	Cleanup()
+	StartCleanupWorker(ctx context.Context)
 }

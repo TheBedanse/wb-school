@@ -11,6 +11,7 @@ package mocks
 
 import (
 	models "L0/internal/models"
+	context "context"
 	reflect "reflect"
 
 	gomock "go.uber.org/mock/gomock"
@@ -107,4 +108,16 @@ func (m *MockCache) Size() int {
 func (mr *MockCacheMockRecorder) Size() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockCache)(nil).Size))
+}
+
+// StartCleanupWorker mocks base method.
+func (m *MockCache) StartCleanupWorker(ctx context.Context) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "StartCleanupWorker", ctx)
+}
+
+// StartCleanupWorker indicates an expected call of StartCleanupWorker.
+func (mr *MockCacheMockRecorder) StartCleanupWorker(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartCleanupWorker", reflect.TypeOf((*MockCache)(nil).StartCleanupWorker), ctx)
 }

@@ -3,7 +3,9 @@ package cache
 import (
 	"L0/internal/interfaces"
 	"L0/internal/models"
+	"context"
 	"fmt"
+	"log"
 	"sync"
 	"time"
 )
@@ -96,17 +98,20 @@ func (c *Cache) Cleanup() {
 		}
 	}
 
-	go c.startCleanupWorker()
-
 }
 
-func (c *Cache) startCleanupWorker() {
+func (c *Cache) StartCleanupWorker(ctx context.Context) {
 	ticker := time.NewTicker(3 * time.Minute)
 	defer ticker.Stop()
 
 	for {
-		<-ticker.C
-		c.Cleanup()
+		select {
+		case <-ticker.C:
+			c.Cleanup()
+		case <-ctx.Done():
+			log.Println("Cleanup worker stopped")
+			return
+		}
 	}
 }
 

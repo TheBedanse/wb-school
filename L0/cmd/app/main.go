@@ -38,6 +38,10 @@ func main() {
 		log.Printf("Cache restored successfully. Loaded %d orders", orderCache.Size())
 	}
 
+	cleanupCtx, cleanupCancel := context.WithCancel(ctx)
+	defer cleanupCancel()
+	go orderCache.StartCleanupWorker(cleanupCtx)
+
 	if cfg.IsKafka {
 		consumer := kafka.NewConsumer(orderService, cfg.KafkaBroker)
 		defer consumer.Close()
